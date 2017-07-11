@@ -96,7 +96,10 @@ void CMDBuild()
 /// Main Function
 int main()
 {
-    CMDBuild();
+    FindFileRev(".",0,0,[](const string& str)
+                {
+                    printf("%s\n",str.c_str());
+                });
     return 0;
 }
 
@@ -178,6 +181,7 @@ void _FindFileRev(const std::string& dirname,
                  const int skiplevel,const int maxlevel,int nowlevel,
                  const std::function<void(const std::string&)>& func)
 {
+    printf("FindFileRev(%s,%d,%d,%d...)\n",dirname.c_str(),skiplevel,maxlevel,nowlevel);
     DIR* Dir = NULL;
     struct dirent* file = NULL;
 
@@ -193,9 +197,9 @@ void _FindFileRev(const std::string& dirname,
         }
         else if (file->d_type == DT_DIR && strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") != 0)
         {
-            if(maxlevel>0 && nowlevel<maxlevel)
+            if(maxlevel<1 || nowlevel<maxlevel)
             {
-                _FindFileRev(dirname + file->d_name,skiplevel,maxlevel,nowlevel+1,func);
+                _FindFileRev(dirname + file->d_name + "/" ,skiplevel,maxlevel,nowlevel+1,func);
             }
         }
     }
