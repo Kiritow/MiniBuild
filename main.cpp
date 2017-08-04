@@ -15,13 +15,13 @@ void FindFileRev(const string& dirname,
 vector<string> FindSourceFile(const string& BasicDir,const vector<string>& SourceSuffix);
 bool EndWith(const string& Source,const string& ToFind);
 string ReplaceEnd(const string& Source,const string& ToFind,const string& ToReplace);
-bool IsExist(const string& Filename);
 struct edtime
 {
     int y,m,d;
     int hh,mm,ss;
 };
 edtime GetEditTime(const string& Filename);
+bool IsFileExist(const string& Filename);
 
 struct compileinfo
 {
@@ -221,6 +221,12 @@ edtime GetEditTime(const string& Filename) /// throw: runtime_error
     }
 }
 
+bool IsFileExist(const string& Filename)
+{
+    WIN32_FILE_ATTRIBUTE_DATA attrs = { 0 };
+    return 0 != GetFileAttributesEx(Filename.c_str(), GetFileExInfoStandard, &attrs);
+}
+
 #else /// Linux-like
 #include <dirent.h>
 #include <sys/types.h>
@@ -316,6 +322,15 @@ edtime GetEditTime(const string& Filename)
         et.ss=ttm.tm_sec;
         return et;
     }
+}
+
+bool IsFileExist(const string& Filename)
+{
+    if(access(Filename.c_str(),F_OK)==0)
+    {
+        return true;
+    }
+    else return false;
 }
 
 #endif
