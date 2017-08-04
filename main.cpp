@@ -222,7 +222,11 @@ edtime GetEditTime(const string& Filename) /// throw: runtime_error
 
 #else /// Linux-like
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <cstdio>
+#include <ctime>
 #include <cstdlib>
 #include <cstring>
 
@@ -269,4 +273,49 @@ void FindFileRev(const std::string& dirname,
         _FindFileRev(dirname,skiplevel,maxlevel,1,func);
     }
 }
+
+/// Linux
+int _GetEditTime_Real(const string& Filename,time_t& modify_time)
+{
+    struct stat statBuf;
+    FILE* fp=fopen(Filename.c_str(),"rb");
+    if(!fp) return -1;
+
+    int fd=fileno(fp);
+    fstat(fd,&statBuf);
+    modify_time=statBuf.st_mtime;
+    fclose(fp);
+
+    return 0;
+}
+
+edtime GetEditTime(const string& Filename)
+{
+    time_t mtime;
+    int ret=_GetEditTime_Real(Filename,mtime);
+    if(ret!=0)
+    {
+        throw std::runtime_error("Failed to get edit time");
+    }
+    else
+    {
+        /// Convert time_t to struct tm
+        struct tm ttm;
+        struct tm* pttm=localtime(&mtime);
+        if(!pttm)
+        {
+            throw std::runtime_error("Failed to convert time_t to struct tm");
+        }
+        memcpy(&ttm,pttm,sizeof(ttm));
+        edtime et;
+        et.y=ttm.tm_year+1900;
+        et.m=ttm.tm_mon+1;
+        et.d=ttm.tm_mday;
+        et.hh=ttm.tm_hour;
+        et.mm=ttm.tm_min;
+        et.ss=ttm.tm_sec;
+        return et;
+    }
+}
+
 #endif
