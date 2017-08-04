@@ -171,6 +171,55 @@ void FindFileRev(const std::string& dirname,
         _FindFileRev(dirname,skiplevel,maxlevel,1,func);
     }
 }
+
+/// Windows
+int _GetEditTime_Real(const string& Filename,edtime& stamp)
+{
+    HANDLE hFile=CreateFile(Filename.c_str(),
+                            GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,
+                            FILE_ATTRIBUTE_NORMAL,NULL);
+    if(hFile==INVALID_HANDLE_VALUE)
+    {
+        return -1;/// WINAPI Error.
+    }
+    FILETIME lastWriteTime,localFileTime;
+    SYSTEMTIME sysTime;
+    BOOL ret=GetFileTime(hFile,NULL,NULL,&lastWriteTime);
+    if(!ret)
+    {
+        CloseHandle(hFile);
+        return -2;/// WINAPI: GetFileTime Error.
+    }
+
+    /// Transfer Time
+    FileTimeToLocalFileTime(&lastWriteTime,&localFileTime);
+    FileTimeToSystemTime(&localFileTime,&sysTime);
+
+    stamp.y=sysTime.wYear;
+    stamp.m=sysTime.wMonth;
+    stamp.d=sysTime.wDay;
+    stamp.hh=sysTime.wHour;
+    stamp.mm=sysTime.wMinute;
+    stamp.ss=sysTime.wSecond;
+
+    CloseHandle(hFile);
+
+    return 0; /// Succeed.
+}
+edtime GetEditTime(const string& Filename) /// throw: runtime_error
+{
+    edtime editTime;
+    int ret=_GetEditTime_Real(Filename,editTime);
+    if(ret!=0)
+    {
+        throw std::runtime_error("Error Calling WINAPI.");
+    }
+    else
+    {
+        return editTime;
+    }
+}
+
 #else /// Linux-like
 #include <dirent.h>
 #include <cstdio>
