@@ -98,7 +98,8 @@ int main()
 {
     FindFileRev(".",0,0,[](const string& str)
                 {
-                    printf("%s\n",str.c_str());
+edtime tx=GetEditTime(str);
+                    printf("%s\n%d-%d-%d %d:%d:%d\n",str.c_str(),tx.y,tx.m,tx.d,tx.hh,tx.mm,tx.ss);
                 });
     return 0;
 }
@@ -234,7 +235,6 @@ void _FindFileRev(const std::string& dirname,
                  const int skiplevel,const int maxlevel,int nowlevel,
                  const std::function<void(const std::string&)>& func)
 {
-    printf("FindFileRev(%s,%d,%d,%d...)\n",dirname.c_str(),skiplevel,maxlevel,nowlevel);
     DIR* Dir = NULL;
     struct dirent* file = NULL;
 
